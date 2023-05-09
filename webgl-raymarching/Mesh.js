@@ -3,7 +3,6 @@ class Mesh
     constructor(verticesArray, indicesArray, shader)
     {
         this.numberOfIndices = indicesArray.length;
-        // Create vao, vbo, and ebo
         this.vao = gl.createVertexArray();
         this.verticesVBO = gl.createBuffer();
         this.ebo = gl.createBuffer();
@@ -26,9 +25,6 @@ class Mesh
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
     }
 
-    /**
-     * Draw the geometry of the mesh
-     */
     Draw()
     {
         gl.bindVertexArray(this.vao);

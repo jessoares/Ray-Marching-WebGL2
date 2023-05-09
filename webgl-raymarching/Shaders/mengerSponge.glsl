@@ -44,10 +44,6 @@ float map(in vec3 p) {
     }
     d = max(d, -d2);
 
-    // floor
-    float d3 = p.y - (-1.5);
-    //d = min(d, d3);
-
     return d;
 }
 
@@ -63,13 +59,6 @@ float cast_ray(in vec3 ro, in vec3 rd) {
     }
     if (t > 10.0) t = inf;
     return t;
-}
-
-vec3 calc_normal(in vec3 p) {
-    vec3 e = vec3(0.001, 0.0, 0.0);
-    return normalize(vec3(map(p + e.xyy) - map(p - e.xyy),
-                          map(p + e.yxy) - map(p - e.yxy),
-                          map(p + e.yyx) - map(p - e.yyx)));
 }
 
 
@@ -103,20 +92,7 @@ void main() {
     float t = cast_ray(ro, rd);
     if (t < inf - 1.) {
         vec3 p = ro + t * rd;
-        vec3 norm = calc_normal(p);
-
-        vec3 c = vec3(1.0);
-
-        vec3  sun1_dir = normalize(vec3(1.0, 2.0, 3.0));
-        float sun1_dif = clamp(dot(norm, sun1_dir), 0.0, 1.0);
-        float sun1_sha = step(inf - 1.0, cast_ray(p, sun1_dir));
-
-        vec3  sun2_dir = normalize(vec3(-1.0, 2.0, -3.0));
-        float sun2_dif = clamp(dot(norm, sun2_dir), 0.0, 1.0);
-        float sun2_sha = step(inf - 1.0, cast_ray(p, sun2_dir));
-
         float fog = 1.0 / (1.0 + t * t * 0.05);
-
         col = vec3(0.8+0.2*sin(time * 0.1), 0.8+0.2*sin(time * 1.0),0.9+0.1*cos(time*1.0));
         col = col * vec3(fog);
     }

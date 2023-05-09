@@ -35,9 +35,6 @@ class Timer
         }
     }
     
-    /**
-     * Return 0 to 2 pi based upon the elapsed ticks
-     */
     GetTicksInRadians()
     {
         return ((this.elapsedTicks - MAX_TICKS) / (MAX_TICKS)) * (Math.PI * 2) 
