@@ -58,7 +58,6 @@ vec2 map1(vec3 p)
 
 
 
-
 vec2 map(vec3  p)
 {
 
@@ -77,6 +76,59 @@ vec2 map(vec3  p)
 
 /*
 */
+
+vec3 calcnormal(vec3 p) {
+    vec2 e = vec2(0.0001, 0.0);
+    vec3 n;
+    n.x = map(p+e.xyy).x - map(p-e.xyy).x;
+    n.y = map(p+e.yxy).x - map(p-e.yxy).x;
+    n.z = map(p+e.yyx).x - map(p-e.yyx).x;
+    return  normalize(n);
+}
+
+vec3 shadeBlinnPhong(vec3 p, vec3 viewDir, vec3 normal, vec3 lightPos, float lightPower, vec3 lightColor) {
+    vec3 diffuseColor = vec3(0.5);
+    vec3 specColor = vec3(1);
+    float shininess = 32.;
+
+    vec3 lightDir = lightPos - p;
+    float dist = length(lightDir);
+    dist = dist*dist;
+    lightDir = normalize(lightDir);
+    
+    float lambertian = max(dot(lightDir, normal), 0.0);
+    float specular = .0;
+    
+    if(lambertian > 0.) {
+        viewDir = normalize(-viewDir);
+        
+        vec3 halfDir = normalize(viewDir + lightDir);
+        float specAngle = max(dot(halfDir, normal), .0);
+        specular = pow(specAngle, shininess);
+    }
+    
+    vec3 color = /*ambientColor +*/
+                 diffuseColor * lambertian * lightColor * lightPower / dist +
+        		 specColor * specular * lightColor * lightPower / dist;
+    
+   	return color;
+}
+
+
+vec3 light(vec3 p, vec3 sn, vec3 rd) {
+    vec3 col1 = cos(vec3(0,2,4) + time);
+    vec3 col2 = cos(vec3(0,2,4) + time + .25);
+    
+    
+    vec3 top = shadeBlinnPhong(p, rd, sn, vec3(0,5,0), 25., vec3(.9));
+    
+    vec3 ambient = vec3(.1);
+    
+    return ambient + top;
+    
+}
+
+
 
 float trace(vec3 ro, vec3 rd) {
     float t = 0.0;
@@ -103,9 +155,9 @@ void main()
     vec3 col = vec3(0.0);
     
     if (t !=0.) {
-        
-    
-        col = vec3(0.5);
+        vec3 p = ro + t * rd;
+        vec3 n = calcnormal(p);
+        col = light(p, n, rd);
         
     }
     float fog = 1.0 / (1.0 + (t) * t + 0.05);
