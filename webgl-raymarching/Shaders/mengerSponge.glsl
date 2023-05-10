@@ -4,97 +4,111 @@ uniform float time;
 uniform vec2 resolution;
 uniform vec3 position;
 
+#define distfar 6.
+#define iterations 6.0
 
-#define DEPTH 5
-
-#define inf 1000000.0
-#define M_PI 3.1415926
-
-float sdbox(in vec3 p) {
-    vec3 q = abs(p) - 1.0;
-    return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+float maxcomp(vec3 p) {
+    return max(p.x,max(p.y,p.z));
 }
 
-float sdbox2d(in vec2 p) {
-    vec2 d = abs(p)-1.0;
-    return length(max(d,0.0)) + min(max(d.x,d.y),0.0);
+float sdBox( vec3 p, vec3 b )
+{
+  vec3  di = abs(p) - b;
+  float mc = maxcomp(di);
+  return min(mc,length(max(di,0.0)));
 }
 
-float sdcross(in vec3 p) {
-    float d1 = sdbox2d(p.xy);
-    float d2 = sdbox2d(p.yz);
-    float d3 = sdbox2d(p.xz);
-    return min(d1, min(d2, d3));
+float sdBox2D(vec2 p, vec2 b) {
+	vec2  di = abs(p) - b;
+    float mc = max(di.x,di.y);
+    return min(mc,length(max(di,0.0)));
 }
 
-float map(in vec3 p) {
-    float d = inf;
+float sdCross( in vec3 p )
+{
+  float da = sdBox2D(p.xy,vec2(1.0));
+  float db = sdBox2D(p.yz,vec2(1.0));
+  float dc = sdBox2D(p.zx,vec2(1.0));
+  return min(da,min(db,dc));
+}
 
-    // fractal
-    float d1 = sdbox(p);
-    d = min(d, d1);
+#define MENGER_ITERATIONS	2
 
-    float d2 = inf;
-    float pw = 1.0;
-    for (int i = 0; i < DEPTH; ++i) {
-        vec3 r = mod(p + pw, pw * 2.0) - pw;
-        float d3 = sdcross(r / (pw / 3.0)) * (pw / 3.0);
-        pw /= 3.0;
-        d2 = min(d2, d3);
+
+
+vec2 map1(vec3 p) 
+{
+    float d = sdBox(p,vec3(1.0));
+    
+    for (float i = 0.0; i < iterations; i++) {
+
+        float scale = pow(2.0,i);
+        vec3 q = mod(scale*p,2.0)-1.0;
+        q = 1.0-abs(q);
+        float c = sdCross(q*3.0)/(scale*3.0);
+        d = max(d,-c),1.0;
+        
+        p += scale/3.0;
+		
     }
-    d = max(d, -d2);
-
-    return d;
+    
+    return vec2(d,1.0);
+    
 }
 
-float cast_ray(in vec3 ro, in vec3 rd) {
-    float t = 0.001;
-    for (int i = 0; i < 100; ++i) {
-        vec3 p = ro + t * rd;
 
-        float h = map(p);
-        if (h < 0.0001) break;
-        if (t > 10.0) break;
-        t += h;
+
+
+vec2 map(vec3  p)
+{
+
+   p.xz = mod(p.xz + 5.0, 2.0) - 1.0;
+   p.y  = mod(p.y + 1.0, 2.0) - 1.0;
+   float t=mod(time,10.0); 
+   float t1=mod(t,4.0);
+   float t2=mod(t,3.0);
+   float d1;
+
+   d1=map1(p).x;
+   
+   return vec2(d1,1.0);
+    
+}
+
+/*
+*/
+
+float trace(vec3 ro, vec3 rd) {
+    float t = 0.0;
+    for (float i = 0.0; i < 1000.0; i++) {
+        if (t > distfar) break;
+        vec2 d = map(ro + rd*t);
+        if (d.x < 0.0001) return t;
+        t += d.x;
     }
-    if (t > 10.0) t = inf;
-    return t;
+    return 0.;
 }
 
+void main() 
+{
+	vec2 uv = gl_FragCoord.xy / resolution.xy * 2.0 - 1.0;
+    uv.x *= resolution.x/resolution.y;
+    
+    vec3 ro = vec3(0.0,0.0,1.5);
+    vec3 rd = normalize(vec3(uv,-1.5));
+    ro.z -= 1. * time;
 
-mat2 rotate(float theta){
-    return mat2(cos(theta), -sin(theta), sin(theta), cos(theta));
-}
-
-void main() {
-    vec2 uv = (gl_FragCoord.xy - resolution.xy / 2.0) / min(resolution.x, resolution.y);
-
-    float r     = 5.0;
-    float theta = 2.0*M_PI * (resolution.x - 0.25);
-    float phi   = 0.5*M_PI * (resolution.y + 0.000001);
-
-    vec3 ta = vec3(0.0, 0.0, 0.0);
-    vec3 ro = ta + r * vec3(sin(phi) * cos(theta), cos(phi), sin(phi) * sin(theta));
-
-    vec3 ww = normalize(ta - ro);
-    vec3 uu = normalize(cross(ww, vec3(0.0, 1.0, 0.0)));
-    vec3 vv = normalize(cross(uu, ww));
-
-    vec3 rd = normalize(vec3(uv.x*uu + uv.y*vv + 1.0*ww));
-
-    theta = time / 1.0;
-    rd.yz *= rotate(theta);
-    rd.xy *= rotate(theta);
-    ro.yz *= rotate(theta);
-    ro.xy *= rotate(theta);
+    float t = trace(ro, rd);
+    
     vec3 col = vec3(0.0);
-
-    float t = cast_ray(ro, rd);
-    if (t < inf - 1.) {
-        vec3 p = ro + t * rd;
-        float fog = 1.0 / (1.0 + t * t * 0.05);
-        col = vec3(0.8+0.2*sin(time * 0.1), 0.8+0.2*sin(time * 1.0),0.9+0.1*cos(time*1.0));
-        col = col * vec3(fog);
+    
+    if (t !=0.) {
+        
+    
+        col = vec3(0.5);
+        
     }
-    gl_FragColor = vec4(col, 1.0);
+    float fog = 1.0 / (1.0 + (t) * t + 0.05);
+    col = mix(vec3(0), col, fog);
+	gl_FragColor = vec4(col , 1.);
 }

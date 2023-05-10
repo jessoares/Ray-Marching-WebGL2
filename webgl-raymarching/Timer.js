@@ -27,10 +27,6 @@ class Timer
         if(this.elapsedTime > NUM_MILLIS_PER_FRAME)
         {
             this.elapsedTicks++;
-            if(this.elapsedTicks == MAX_TICKS)
-            {
-                this.elapsedTicks = 0;
-            }
             this.elapsedTime = 0;
         }
     }
