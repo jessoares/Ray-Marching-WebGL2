@@ -74,7 +74,7 @@ vec3 shadeBlinnPhong(vec3 p, vec3 viewDir, vec3 normal, vec3 lightPos, float lig
     vec3 specColor = vec3(1);
     float shininess = 32.;
 
-    vec3 lightDir = lightPos - p;
+    vec3 lightDir = viewDir - p;
     float dist = length(lightDir);
     dist = dist*dist;
     lightDir = normalize(lightDir);
@@ -99,7 +99,7 @@ vec3 shadeBlinnPhong(vec3 p, vec3 viewDir, vec3 normal, vec3 lightPos, float lig
 
 vec3 light(vec3 p, vec3 sn, vec3 rd) {
 
-    vec3 top = shadeBlinnPhong(p, rd, sn, vec3(0,7,0), 20., vec3(.9));
+    vec3 top = shadeBlinnPhong(p, rd, sn, vec3(0,0,0), 20., vec3(.9));
     
     vec3 ambient = vec3(.1);
     
