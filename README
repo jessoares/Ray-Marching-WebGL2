@@ -1,1 +1,8 @@
-Origem do código de implementação WebGL:https://github.com/Abar23/WebGL-Ray-Marcher
+Origem de códigos que serviram de base para este trabalho, algumas partes do código podem ter sido tiradas destes trabalhos:
+
+Implementação WebGL:https://github.com/Abar23/WebGL-Ray-Marcher
+Fractal Esponja Menger: https://www.shadertoy.com/view/sldXD2
+Repetição de estruturas: https://www.shadertoy.com/view/3tlSRl
+Escuridão: https://www.shadertoy.com/view/tsBGWw
+Luz modelo Phong: https://www.shadertoy.com/view/tsB3Wd
+Movimentação da camera: https://www.shadertoy.com/view/Wsjczh

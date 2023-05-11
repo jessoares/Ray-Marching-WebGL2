@@ -130,9 +130,6 @@ vec3 calcnormal(vec3 p) {
 
 void main() 
 {
-	vec2 uv = gl_FragCoord.xy / resolution.xy * 2.0 - 1.0;
-    uv.x *= resolution.x/resolution.y;
-    
    vec3 cameraPos = vec3(0.,4.,0.);
    vec3 lookAt = vec3(0.,4.0,10.);
    float offset = time * 2. * 1.;
@@ -157,9 +154,9 @@ void main()
     vec3 col = vec3(0.0);
     
     if (t !=0.) {
-        vec3 l = ro + t * rd;
-        vec3 n = calcnormal(l);
-        col = light(l, n, rd);
+        vec3 pl = ro + t * rd;
+        vec3 n = calcnormal(pl);
+        col = light(pl, n, rd);
         
     }
     float fog = 1.0 / (1.0 + (t) * t + 0.05);
